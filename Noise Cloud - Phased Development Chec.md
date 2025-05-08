@@ -41,13 +41,13 @@
 
 **Phase 3: UI Structure & Overall Noise Controls**
 
-*   [ ] **Collapsible Panel:**
-    *   [ ] Create `src/ui/Panel.js` for the collapsible side panel.
-    *   [ ] Integrate the panel into `index.html`.
-    *   [ ] Initialize the panel in `src/main.js`.
-*   [ ] **Overall Noise Controls UI:**
-    *   [ ] Create `src/ui/NoiseControls.js`.
-    *   [ ] Implement UI for:
+*   [x] **Collapsible Panel:**
+    *   [x] Create `src/ui/Panel.js` for the collapsible side panel.
+    *   [x] Integrate the panel into `index.html`.
+    *   [x] Initialize the panel in `src/main.js`.
+*   [x] **Overall Noise Controls UI:**
+    *   [x] Create `src/ui/NoiseControls.js`.
+    *   [x] Implement UI for:
         *   Seed
         *   Global Frequency
         *   Global Amplitude
@@ -57,13 +57,13 @@
         *   Frequency Scaling X
         *   Frequency Scaling Y
         *   Frequency Scaling Z
-    *   [ ] Connect UI elements to shader uniforms.
-*   [ ] **Seed Uniform:**
-    *   [ ] Add seed functionality to the shader.
-*   [ ] **Parameter Uniforms:**
-    *   [ ] Add Global Parameter functionality to the shader.
-*   [ ] **Commit Changes:**
-    *   [ ] Commit the UI framework and seed control.
+    *   [x] Connect UI elements to shader uniforms.
+*   [x] **Seed Uniform:**
+    *   [x] Add seed functionality to the shader.
+*   [x] **Parameter Uniforms:**
+    *   [x] Add Global Parameter functionality to the shader.
+*   [x] **Commit Changes:**
+    *   [x] Commit the UI framework and seed control.
 
 **Phase 4: NOISE_MASK Implementation & UI**
 

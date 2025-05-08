@@ -3,6 +3,7 @@ precision mediump float;
 // Constants
 const int B = 1024; // Increased from 256 to 1024
 const int OCTAVES = 5; // Hardcoded octave count for all noise functions
+const int GRADIENT_SAMPLES = 16; // Number of color samples in each gradient
 
 // Uniforms from JavaScript
 uniform vec2 u_resolution;
@@ -16,6 +17,61 @@ uniform float u_speed_z;      // Speed of noise movement in Z
 uniform float u_freq_scale_x; // Frequency scaling for X
 uniform float u_freq_scale_y; // Frequency scaling for Y
 uniform float u_freq_scale_z; // Frequency scaling for Z
+
+// NOISE_MASK Uniforms
+uniform float u_mask_frequency;     // Frequency for the mask noise
+uniform float u_mask_amplitude;     // Amplitude for the mask noise
+uniform float u_mask_gain;          // Gain for the mask noise
+uniform float u_warp_intensity;     // Intensity of domain warping
+uniform float u_warp_scale;         // Scale of domain warping
+uniform float u_cutoff1;            // First cutoff value for mask layers (0-1)
+uniform float u_cutoff2;            // Second cutoff value for mask layers (0-1)
+uniform float u_softness;           // Softness of transitions between layers (0-1)
+
+// BASE_NOISE Uniforms - Layer 1
+uniform bool u_base1_active;        // Whether layer 1 is active
+uniform float u_base1_offset_x;     // Position offset X for layer 1
+uniform float u_base1_offset_y;     // Position offset Y for layer 1
+uniform float u_base1_offset_z;     // Position offset Z for layer 1
+uniform float u_base1_freq_offset;  // Frequency offset for layer 1
+uniform float u_base1_amp_offset;   // Amplitude offset for layer 1
+uniform float u_base1_frequency;    // Frequency for layer 1 noise
+uniform float u_base1_amplitude;    // Amplitude for layer 1 noise
+uniform float u_base1_gain;         // Gain for layer 1 noise
+uniform float u_base1_warp_intensity; // Domain warping intensity for layer 1
+uniform float u_base1_warp_scale;   // Domain warping scale for layer 1
+uniform int u_base1_warp_type;      // Warping type: 0=Add, 1=Multiply, 2=Exponential, 3=Logarithmic
+uniform vec4 u_base1_gradient[GRADIENT_SAMPLES]; // Color gradient for layer 1
+
+// BASE_NOISE Uniforms - Layer 2
+uniform bool u_base2_active;        // Whether layer 2 is active
+uniform float u_base2_offset_x;     // Position offset X for layer 2
+uniform float u_base2_offset_y;     // Position offset Y for layer 2
+uniform float u_base2_offset_z;     // Position offset Z for layer 2
+uniform float u_base2_freq_offset;  // Frequency offset for layer 2
+uniform float u_base2_amp_offset;   // Amplitude offset for layer 2
+uniform float u_base2_frequency;    // Frequency for layer 2 noise
+uniform float u_base2_amplitude;    // Amplitude for layer 2 noise
+uniform float u_base2_gain;         // Gain for layer 2 noise
+uniform float u_base2_warp_intensity; // Domain warping intensity for layer 2
+uniform float u_base2_warp_scale;   // Domain warping scale for layer 2
+uniform int u_base2_warp_type;      // Warping type: 0=Add, 1=Multiply, 2=Exponential, 3=Logarithmic
+uniform vec4 u_base2_gradient[GRADIENT_SAMPLES]; // Color gradient for layer 2
+
+// BASE_NOISE Uniforms - Layer 3
+uniform bool u_base3_active;        // Whether layer 3 is active
+uniform float u_base3_offset_x;     // Position offset X for layer 3
+uniform float u_base3_offset_y;     // Position offset Y for layer 3
+uniform float u_base3_offset_z;     // Position offset Z for layer 3
+uniform float u_base3_freq_offset;  // Frequency offset for layer 3
+uniform float u_base3_amp_offset;   // Amplitude offset for layer 3
+uniform float u_base3_frequency;    // Frequency for layer 3 noise
+uniform float u_base3_amplitude;    // Amplitude for layer 3 noise
+uniform float u_base3_gain;         // Gain for layer 3 noise
+uniform float u_base3_warp_intensity; // Domain warping intensity for layer 3
+uniform float u_base3_warp_scale;   // Domain warping scale for layer 3
+uniform int u_base3_warp_type;      // Warping type: 0=Add, 1=Multiply, 2=Exponential, 3=Logarithmic
+uniform vec4 u_base3_gradient[GRADIENT_SAMPLES]; // Color gradient for layer 3
 
 // Hash function to replace the permutation table
 // Based on https://www.shadertoy.com/view/4djSRW
@@ -133,6 +189,144 @@ float fractalNoise3D(vec3 p, float frequency, float amplitude, vec3 seed) {
     return sum;
 }
 
+// Custom fractal noise with variable gain
+float customFractalNoise3D(vec3 p, float frequency, float amplitude, float gain, vec3 seed) {
+    float sum = 0.0;
+    float currentGain = 1.0;
+    
+    for (int i = 0; i < OCTAVES; i++) {
+        sum += noise3D(p * currentGain / frequency, seed) * (amplitude / currentGain);
+        currentGain *= gain;
+    }
+    
+    return sum;
+}
+
+// Domain warping function - takes a position and returns a warped position
+vec3 domainWarp(vec3 p, float intensity, float scale, vec3 seed) {
+    // Generate a warping vector using noise
+    vec3 warp;
+    warp.x = noise3D(p * scale, seed);
+    warp.y = noise3D(p * scale + vec3(31.416, 27.183, 6.283), seed);
+    warp.z = noise3D(p * scale + vec3(-13.37, 47.62, -1.618), seed);
+    
+    // Apply the warping with intensity control
+    return p + warp * intensity;
+}
+
+// Apply domain warping with different types
+vec3 applyCustomWarp(vec3 p, int warpType, float intensity, float scale, vec3 seed) {
+    // Generate a warping vector using noise
+    vec3 warp;
+    warp.x = noise3D(p * scale, seed);
+    warp.y = noise3D(p * scale + vec3(31.416, 27.183, 6.283), seed);
+    warp.z = noise3D(p * scale + vec3(-13.37, 47.62, -1.618), seed);
+    
+    // Apply warping based on type
+    if (warpType == 0) {
+        // Add - traditional domain warping
+        return p + warp * intensity;
+    } 
+    else if (warpType == 1) {
+        // Multiply - scales the domain based on noise
+        return p * (1.0 + warp * intensity);
+    }
+    else if (warpType == 2) {
+        // Exponential - extreme warping effect
+        return p * exp(warp * intensity);
+    }
+    else if (warpType == 3) {
+        // Logarithmic - subtle warping effect
+        return p + log(1.0 + abs(warp) * intensity);
+    }
+    
+    // Default to Add
+    return p + warp * intensity;
+}
+
+// Mask noise function - returns noise value for mask calculation with domain warping
+float maskNoise(vec3 p, float frequency, float amplitude, float gain, float warpIntensity, float warpScale, vec3 seed) {
+    // Apply domain warping to the position
+    vec3 warpedPos = domainWarp(p, warpIntensity, warpScale, seed);
+    
+    // Generate fractal noise with the warped position
+    float noiseValue = customFractalNoise3D(warpedPos, frequency, amplitude, gain, seed);
+    
+    return noiseValue;
+}
+
+// Base noise function - returns noise value for a base layer with domain warping and parameters
+float baseNoise(
+    vec3 p, 
+    float frequency, 
+    float amplitude,
+    float gain,
+    float warpIntensity, 
+    float warpScale,
+    int warpType,
+    vec3 seed
+) {
+    // Apply custom domain warping to the position
+    vec3 warpedPos = applyCustomWarp(p, warpType, warpIntensity, warpScale, seed);
+    
+    // Generate fractal noise with the warped position and custom gain
+    return customFractalNoise3D(warpedPos, frequency, amplitude, gain, seed);
+}
+
+// Calculate the mask layers based on cutoff values and softness
+vec3 calculateMaskLayers(float noiseValue, float cutoff1, float cutoff2, float softness) {
+    // Ensure cutoff values are in the right order
+    cutoff1 = min(cutoff1, cutoff2);
+    cutoff2 = max(cutoff1, cutoff2);
+    
+    // Calculate softness factor (higher value = more blending)
+    float blend = max(0.001, softness) * 0.1;
+    
+    // Calculate smooth transitions using smoothstep
+    float mask1 = 1.0 - smoothstep(cutoff1 - blend, cutoff1 + blend, noiseValue);
+    float mask2 = smoothstep(cutoff1 - blend, cutoff1 + blend, noiseValue) * 
+                 (1.0 - smoothstep(cutoff2 - blend, cutoff2 + blend, noiseValue));
+    float mask3 = smoothstep(cutoff2 - blend, cutoff2 + blend, noiseValue);
+    
+    // Return mask values as RGB components
+    return vec3(mask1, mask2, mask3);
+}
+
+// Sample a color from a gradient array
+vec3 sampleGradient(vec4 gradient[GRADIENT_SAMPLES], float t) {
+    // Ensure t is in the range [0, 1]
+    t = clamp(t, 0.0, 1.0);
+    
+    // Calculate the index for linear interpolation
+    float indexFloat = t * float(GRADIENT_SAMPLES - 1);
+    int index = int(floor(indexFloat));
+    float fract = indexFloat - float(index);
+    
+    // Get the colors using a loop instead of direct indexing
+    vec3 color1 = vec3(0.0);
+    vec3 color2 = vec3(0.0);
+    
+    // Loop through the gradient to find our colors
+    for (int i = 0; i < GRADIENT_SAMPLES; i++) {
+        if (i == index) {
+            color1 = gradient[i].rgb;
+        }
+        if (i == index + 1) {
+            color2 = gradient[i].rgb;
+        }
+    }
+    
+    // If we're at the last sample, use the last color for both
+    if (index >= GRADIENT_SAMPLES - 1) {
+        color2 = color1;
+    }
+    
+    // Interpolate between the colors
+    vec3 finalColor = mix(color1, color2, fract);
+    
+    return finalColor;
+}
+
 void main() {
     // Normalized pixel coordinates (0.0 to 1.0)
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
@@ -156,21 +350,124 @@ void main() {
     // Generate a seed vector based on the uniform seed
     vec3 seed = hash3(u_seed);
     
-    // Generate 3D fractal noise with hardcoded 5 octaves
-    float n = fractalNoise3D(p, u_frequency, u_amplitude, seed);
+    // Generate mask noise
+    float maskNoiseValue = maskNoise(
+        p, 
+        u_mask_frequency * u_frequency, 
+        u_mask_amplitude * u_amplitude, 
+        u_mask_gain, 
+        u_warp_intensity, 
+        u_warp_scale,
+        seed
+    );
     
-    // Map noise value to color (simple grayscale)
-    // Adjust range from [-0.5, 0.5] to [0, 1]
-    n = n + 0.5;
+    // Map noise value from [-0.5, 0.5] to [0, 1]
+    maskNoiseValue = maskNoiseValue + 0.5;
     
-    // Create a cloud-like effect with color gradient
-    vec3 skyColor = vec3(0.1, 0.3, 0.6); // Deep blue sky
-    vec3 cloudColor = vec3(0.9, 0.9, 1.0); // White-ish clouds
+    // Calculate mask layers
+    vec3 maskLayers = calculateMaskLayers(maskNoiseValue, u_cutoff1, u_cutoff2, u_softness);
     
-    // Apply a threshold for more cloud-like appearance
-    float cloudiness = smoothstep(0.4, 0.6, n);
-    vec3 color = mix(skyColor, cloudColor, cloudiness);
+    // Generate base layer noise values
+    vec3 finalColor = vec3(0.0);
+    
+    // Apply Layer 1 if active
+    if (u_base1_active) {
+        // Create position with layer-specific offsets
+        vec3 p1 = vec3(
+            p.x + u_base1_offset_x,
+            p.y + u_base1_offset_y,
+            p.z + u_base1_offset_z
+        );
+        
+        // Generate base noise with layer-specific parameters
+        float noise1 = baseNoise(
+            p1,
+            u_base1_frequency * u_frequency + u_base1_freq_offset,
+            u_base1_amplitude * u_amplitude + u_base1_amp_offset,
+            u_base1_gain,
+            u_base1_warp_intensity,
+            u_base1_warp_scale,
+            u_base1_warp_type,
+            seed
+        );
+        
+        // Map noise to [0, 1] for gradient sampling
+        float t1 = noise1 + 0.5;
+        
+        // Sample the gradient
+        vec3 color1 = sampleGradient(u_base1_gradient, t1);
+        
+        // Apply mask
+        finalColor += color1 * maskLayers.r;
+    }
+    
+    // Apply Layer 2 if active
+    if (u_base2_active) {
+        // Create position with layer-specific offsets
+        vec3 p2 = vec3(
+            p.x + u_base2_offset_x,
+            p.y + u_base2_offset_y,
+            p.z + u_base2_offset_z
+        );
+        
+        // Generate base noise with layer-specific parameters
+        float noise2 = baseNoise(
+            p2,
+            u_base2_frequency * u_frequency + u_base2_freq_offset,
+            u_base2_amplitude * u_amplitude + u_base2_amp_offset,
+            u_base2_gain,
+            u_base2_warp_intensity,
+            u_base2_warp_scale,
+            u_base2_warp_type,
+            seed
+        );
+        
+        // Map noise to [0, 1] for gradient sampling
+        float t2 = noise2 + 0.5;
+        
+        // Sample the gradient
+        vec3 color2 = sampleGradient(u_base2_gradient, t2);
+        
+        // Apply mask
+        finalColor += color2 * maskLayers.g;
+    }
+    
+    // Apply Layer 3 if active
+    if (u_base3_active) {
+        // Create position with layer-specific offsets
+        vec3 p3 = vec3(
+            p.x + u_base3_offset_x,
+            p.y + u_base3_offset_y,
+            p.z + u_base3_offset_z
+        );
+        
+        // Generate base noise with layer-specific parameters
+        float noise3 = baseNoise(
+            p3,
+            u_base3_frequency * u_frequency + u_base3_freq_offset,
+            u_base3_amplitude * u_amplitude + u_base3_amp_offset,
+            u_base3_gain,
+            u_base3_warp_intensity,
+            u_base3_warp_scale,
+            u_base3_warp_type,
+            seed
+        );
+        
+        // Map noise to [0, 1] for gradient sampling
+        float t3 = noise3 + 0.5;
+        
+        // Sample the gradient
+        vec3 color3 = sampleGradient(u_base3_gradient, t3);
+        
+        // Apply mask
+        finalColor += color3 * maskLayers.b;
+    }
+    
+    // If nothing is active, show the mask layers
+    if (!u_base1_active && !u_base2_active && !u_base3_active) {
+        finalColor = maskLayers;
+    }
     
     // Output final color
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(finalColor, 1.0);
 }

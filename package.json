@@ -11,7 +11,7 @@
   "dependencies": {
     "lil-gui": "^0.16.1",
     "pixi.js": "^6.5.10",
-    "tinygradient": "^1.1.0"
+    "tinygradient": "^1.1.5"
   },
   "devDependencies": {
     "vite": "^2.6.14"
