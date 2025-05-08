@@ -27,17 +27,17 @@
 
 **Phase 2: Custom Perlin Noise Implementation & Integration**
 
-*   [ ] **Perlin Analysis & Conversion:**
-    *   [ ] Analyze existing custom Perlin implementation (identify core logic, data structures).
-    *   [ ] Convert the Perlin implementation to GLSL (optimize for shader performance).
-    *   [ ] Verify the GLSL implementation produces the same (or similar) output as the original.
+*   [x] **Perlin Analysis & Conversion:**
+    *   [x] Analyze existing custom Perlin implementation (identify core logic, data structures).
+    *   [x] Convert the Perlin implementation to GLSL (optimize for shader performance).
+    *   [x] Verify the GLSL implementation produces the same (or similar) output as the original.
 *   [ ] **3D Perlin Integration:**
-    *   [ ] Replace the basic shader with the 3D Perlin noise shader in `src/shaders/my_shader.frag`.
-    *   [ ] Verify the Perlin noise is rendering correctly (basic visual check).
-*   [ ] **Speed Control Uniforms:**
-    *   [ ] Pass speed control uniforms (X, Y, Z, Freq Scaling X, Y, Z) to the shader.
-*   [ ] **Commit Changes:**
-    *   [ ] Commit the working Perlin noise implementation.
+    *   [x] Replace the basic shader with the 3D Perlin noise shader in `src/shaders/my_shader.frag`.
+    *   [x] Verify the Perlin noise is rendering correctly (basic visual check).
+*   [x] **Speed Control Uniforms:**
+    *   [x] Pass speed control uniforms (X, Y, Z, Freq Scaling X, Y, Z) to the shader.
+*   [x] **Commit Changes:**
+    *   [x] Commit the working Perlin noise implementation.
 
 **Phase 3: UI Structure & Overall Noise Controls**
 

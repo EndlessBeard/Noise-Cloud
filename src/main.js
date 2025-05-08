@@ -2,6 +2,8 @@
 
 import * as PIXI from 'pixi.js';
 import ShaderLoader from './utils/ShaderLoader.js';
+import Panel from './ui/Panel.js';
+import NoiseControls from './ui/NoiseControls.js';
 
 class NoiseCloudApp {
   constructor() {
@@ -56,7 +58,7 @@ class NoiseCloudApp {
       this.shaderSprite.width = this.app.screen.width;
       this.shaderSprite.height = this.app.screen.height;
       
-      // Create a new PIXI.Shader
+      // Create a new PIXI.Shader with default uniform values
       const shaderUniforms = {
         u_resolution: [this.app.screen.width, this.app.screen.height],
         u_time: 0.0,
@@ -82,10 +84,31 @@ class NoiseCloudApp {
       // Setup animation ticker
       this.setupTicker();
       
+      // Initialize UI components
+      this.initUI();
+      
       console.log('Shader successfully loaded and applied');
     } catch (error) {
       console.error('Failed to initialize shader:', error);
     }
+  }
+  
+  initUI() {
+    // Create the control panel
+    this.panel = new Panel({
+      title: 'Noise Cloud Controls',
+      position: 'right',
+      width: '300px',
+      collapsed: false,
+      theme: 'dark'
+    });
+    
+    // Create noise controls and add them to the panel
+    this.noiseControls = new NoiseControls(this);
+    this.panel.addContent(this.noiseControls.getElement());
+    
+    // Initialize controls with current uniform values
+    this.noiseControls.updateUniforms();
   }
   
   setupTicker() {

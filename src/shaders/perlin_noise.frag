@@ -2,6 +2,7 @@ precision mediump float;
 
 // Constants
 const int B = 1024; // Increased from 256 to 1024
+const int OCTAVES = 5; // Hardcoded octave count for all noise functions
 
 // Uniforms from JavaScript
 uniform vec2 u_resolution;
@@ -119,14 +120,12 @@ float noise3D(vec3 p, vec3 seed) {
     return result * 0.5;
 }
 
-// Fractal noise function
-float fractalNoise3D(vec3 p, int octaves, float frequency, float amplitude, vec3 seed) {
+// Fractal noise function with hardcoded 5 octaves
+float fractalNoise3D(vec3 p, float frequency, float amplitude, vec3 seed) {
     float sum = 0.0;
     float gain = 1.0;
     
-    for (int i = 0; i < 10; i++) {
-        if (i >= octaves) break; // GLSL loop needs fixed upper bound
-        
+    for (int i = 0; i < OCTAVES; i++) {
         sum += noise3D(p * gain / frequency, seed) * (amplitude / gain);
         gain *= 2.0;
     }
@@ -157,8 +156,8 @@ void main() {
     // Generate a seed vector based on the uniform seed
     vec3 seed = hash3(u_seed);
     
-    // Generate 3D fractal noise with 4 octaves
-    float n = fractalNoise3D(p, 4, u_frequency, u_amplitude, seed);
+    // Generate 3D fractal noise with hardcoded 5 octaves
+    float n = fractalNoise3D(p, u_frequency, u_amplitude, seed);
     
     // Map noise value to color (simple grayscale)
     // Adjust range from [-0.5, 0.5] to [0, 1]
