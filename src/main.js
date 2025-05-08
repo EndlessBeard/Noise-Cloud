@@ -49,18 +49,29 @@ class NoiseCloudApp {
   async init() {
     try {
       // Load the shader source
-      const fragmentShader = await ShaderLoader.load('./src/shaders/my_shader.frag');
+      const fragmentShader = await ShaderLoader.load('./src/shaders/perlin_noise.frag');
       
       // Create a full-screen sprite to apply our shader
       this.shaderSprite = new PIXI.Sprite(PIXI.Texture.WHITE);
       this.shaderSprite.width = this.app.screen.width;
       this.shaderSprite.height = this.app.screen.height;
       
-      // Create a shader filter with our fragment shader
-      this.shaderFilter = new PIXI.Filter(null, fragmentShader, {
+      // Create a new PIXI.Shader
+      const shaderUniforms = {
         u_resolution: [this.app.screen.width, this.app.screen.height],
-        u_time: 0.0
-      });
+        u_time: 0.0,
+        u_seed: 12345.0,  // Initial seed value
+        u_frequency: 1.0,
+        u_amplitude: 1.0,
+        u_speed_x: 0.1,
+        u_speed_y: 0.1,
+        u_speed_z: 0.05,
+        u_freq_scale_x: 1.0,
+        u_freq_scale_y: 1.0,
+        u_freq_scale_z: 1.0
+      };
+
+      this.shaderFilter = new PIXI.Filter(undefined, fragmentShader, shaderUniforms);
       
       // Apply the filter to the sprite
       this.shaderSprite.filters = [this.shaderFilter];

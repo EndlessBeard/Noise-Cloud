@@ -4,26 +4,26 @@
 
 **Phase 1: Core Setup & Basic Rendering**
 
-*   [ ] **Environment Setup:**
-    *   [ ] Install Node.js and NPM
-    *   [ ] Initialize Project: `npm create vite noise-cloud --template vanilla`
-    *   [ ] Install Dependencies: `npm install pixi.js lil-gui tinygradient`
-*   [ ] **Vite Configuration:**
-    *   [ ] Configure `vite.config.js` to handle GLSL files as raw text (`assetsInclude`).
-*   [ ] **Basic PixiJS Setup:**
-    *   [ ] Initialize a PixiJS application (stage, renderer, ticker) in `src/main.js`.
-    *   [ ] Handle window resize for responsive rendering.
-*   [ ] **Shader Loading:**
-    *   [ ] Create `src/utils/ShaderLoader.js` to asynchronously load GLSL shaders from files.
-*   [ ] **Initial Shader & Sprite:**
-    *   [ ] Create a simple GLSL fragment shader (`src/shaders/my_shader.frag`) for basic output (solid color/gradient).
-    *   [ ] Create a PixiJS Sprite (or Graphics) and apply the initial shader.
-    *   [ ] Pass resolution as a uniform.
+*   [X] **Environment Setup:**
+    *   [x] Install Node.js and NPM
+    *   [x] Initialize Project: `npm create vite noise-cloud --template vanilla`
+    *   [x] Install Dependencies: `npm install pixi.js lil-gui tinygradient`
+*   [X] **Vite Configuration:**
+    *   [x] Configure `vite.config.js` to handle GLSL files as raw text (`assetsInclude`).
+*   [X] **Basic PixiJS Setup:**
+    *   [x] Initialize a PixiJS application (stage, renderer, ticker) in `src/main.js`.
+    *   [x] Handle window resize for responsive rendering.
+*   [x] **Shader Loading:**
+    *   [x] Create `src/utils/ShaderLoader.js` to asynchronously load GLSL shaders from files.
+*   [x] **Initial Shader & Sprite:**
+    *   [x] Create a simple GLSL fragment shader (`src/shaders/my_shader.frag`) for basic output (solid color/gradient).
+    *   [x] Create a PixiJS Sprite (or Graphics) and apply the initial shader.
+    *   [x] Pass resolution as a uniform.
 *   [ ] **Basic Animation:**
-    *   [ ] Pass `u_time` uniform for animation.
+    *   [x] Pass `u_time` uniform for animation.
 *   [ ] **Version Control:**
-    *   [ ] Initialize Git repository.
-    *   [ ] Make initial commit.
+    *   [X] Initialize Git repository.
+    *   [X] Make initial commit.
 
 **Phase 2: Custom Perlin Noise Implementation & Integration**
 
