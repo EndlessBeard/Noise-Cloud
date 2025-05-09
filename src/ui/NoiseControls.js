@@ -403,8 +403,8 @@ export default class NoiseControls {
         // Convert warp type string to integer value
         uniforms[`u_${layerPrefix}_warp_type`] = this.warpTypes.indexOf(layerParams.warpType);
         
-        // Update gradient uniforms
-        uniforms[`u_${layerPrefix}_gradient`] = this.colorGradients[layerPrefix].getColorArray();
+        // Update gradient texture uniform instead of array
+        uniforms[`u_${layerPrefix}_gradientTex`] = this.colorGradients[layerPrefix].getTexture();
     }
     
     /**

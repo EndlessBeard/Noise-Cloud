@@ -41,7 +41,7 @@ uniform float u_base1_gain;         // Gain for layer 1 noise
 uniform float u_base1_warp_intensity; // Domain warping intensity for layer 1
 uniform float u_base1_warp_scale;   // Domain warping scale for layer 1
 uniform int u_base1_warp_type;      // Warping type: 0=Add, 1=Multiply, 2=Exponential, 3=Logarithmic
-uniform vec4 u_base1_gradient[GRADIENT_SAMPLES]; // Color gradient for layer 1
+uniform sampler2D u_base1_gradientTex; // Color gradient for layer 1
 
 // BASE_NOISE Uniforms - Layer 2
 uniform bool u_base2_active;        // Whether layer 2 is active
@@ -56,7 +56,7 @@ uniform float u_base2_gain;         // Gain for layer 2 noise
 uniform float u_base2_warp_intensity; // Domain warping intensity for layer 2
 uniform float u_base2_warp_scale;   // Domain warping scale for layer 2
 uniform int u_base2_warp_type;      // Warping type: 0=Add, 1=Multiply, 2=Exponential, 3=Logarithmic
-uniform vec4 u_base2_gradient[GRADIENT_SAMPLES]; // Color gradient for layer 2
+uniform sampler2D u_base2_gradientTex; // Color gradient for layer 2
 
 // BASE_NOISE Uniforms - Layer 3
 uniform bool u_base3_active;        // Whether layer 3 is active
@@ -71,7 +71,7 @@ uniform float u_base3_gain;         // Gain for layer 3 noise
 uniform float u_base3_warp_intensity; // Domain warping intensity for layer 3
 uniform float u_base3_warp_scale;   // Domain warping scale for layer 3
 uniform int u_base3_warp_type;      // Warping type: 0=Add, 1=Multiply, 2=Exponential, 3=Logarithmic
-uniform vec4 u_base3_gradient[GRADIENT_SAMPLES]; // Color gradient for layer 3
+uniform sampler2D u_base3_gradientTex; // Color gradient for layer 3
 
 // Hash function to replace the permutation table
 // Based on https://www.shadertoy.com/view/4djSRW
@@ -293,38 +293,12 @@ vec3 calculateMaskLayers(float noiseValue, float cutoff1, float cutoff2, float s
 }
 
 // Sample a color from a gradient array
-vec3 sampleGradient(vec4 gradient[GRADIENT_SAMPLES], float t) {
+vec3 sampleGradient(sampler2D gradientTex, float t) {
     // Ensure t is in the range [0, 1]
     t = clamp(t, 0.0, 1.0);
     
-    // Calculate the index for linear interpolation
-    float indexFloat = t * float(GRADIENT_SAMPLES - 1);
-    int index = int(floor(indexFloat));
-    float fract = indexFloat - float(index);
-    
-    // Get the colors using a loop instead of direct indexing
-    vec3 color1 = vec3(0.0);
-    vec3 color2 = vec3(0.0);
-    
-    // Loop through the gradient to find our colors
-    for (int i = 0; i < GRADIENT_SAMPLES; i++) {
-        if (i == index) {
-            color1 = gradient[i].rgb;
-        }
-        if (i == index + 1) {
-            color2 = gradient[i].rgb;
-        }
-    }
-    
-    // If we're at the last sample, use the last color for both
-    if (index >= GRADIENT_SAMPLES - 1) {
-        color2 = color1;
-    }
-    
-    // Interpolate between the colors
-    vec3 finalColor = mix(color1, color2, fract);
-    
-    return finalColor;
+    // Sample the 1D texture (using a 2D texture with a fixed y coordinate)
+    return texture2D(gradientTex, vec2(t, 0.5)).rgb;
 }
 
 void main() {
@@ -395,7 +369,7 @@ void main() {
         float t1 = noise1 + 0.5;
         
         // Sample the gradient
-        vec3 color1 = sampleGradient(u_base1_gradient, t1);
+        vec3 color1 = sampleGradient(u_base1_gradientTex, t1);
         
         // Apply mask
         finalColor += color1 * maskLayers.r;
@@ -426,7 +400,7 @@ void main() {
         float t2 = noise2 + 0.5;
         
         // Sample the gradient
-        vec3 color2 = sampleGradient(u_base2_gradient, t2);
+        vec3 color2 = sampleGradient(u_base2_gradientTex, t2);
         
         // Apply mask
         finalColor += color2 * maskLayers.g;
@@ -457,7 +431,7 @@ void main() {
         float t3 = noise3 + 0.5;
         
         // Sample the gradient
-        vec3 color3 = sampleGradient(u_base3_gradient, t3);
+        vec3 color3 = sampleGradient(u_base3_gradientTex, t3);
         
         // Apply mask
         finalColor += color3 * maskLayers.b;

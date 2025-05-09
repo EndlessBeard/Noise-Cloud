@@ -116,7 +116,7 @@ class NoiseCloudApp {
         u_base1_warp_intensity: 0.3,
         u_base1_warp_scale: 1.0,
         u_base1_warp_type: 0, // 0=Add
-        u_base1_gradient: blueGradient.getColorArray(),
+        u_base1_gradientTex: blueGradient.getTexture(),
         
         // BASE2 uniforms
         u_base2_active: true,
@@ -131,7 +131,7 @@ class NoiseCloudApp {
         u_base2_warp_intensity: 0.3,
         u_base2_warp_scale: 1.0,
         u_base2_warp_type: 0, // 0=Add
-        u_base2_gradient: greenGradient.getColorArray(),
+        u_base2_gradientTex: greenGradient.getTexture(),
         
         // BASE3 uniforms
         u_base3_active: true,
@@ -146,7 +146,7 @@ class NoiseCloudApp {
         u_base3_warp_intensity: 0.3,
         u_base3_warp_scale: 1.0,
         u_base3_warp_type: 0, // 0=Add
-        u_base3_gradient: redGradient.getColorArray()
+        u_base3_gradientTex: redGradient.getTexture()
       };
 
       this.shaderFilter = new PIXI.Filter(undefined, fragmentShader, shaderUniforms);

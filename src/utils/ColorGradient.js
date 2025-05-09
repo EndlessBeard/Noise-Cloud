@@ -3,6 +3,7 @@
  * Uses tinygradient internally to manage gradients
  */
 import tinygradient from 'tinygradient';
+import * as PIXI from 'pixi.js';
 
 export default class ColorGradient {
     /**
@@ -18,6 +19,7 @@ export default class ColorGradient {
         
         this.stops = stops.length > 0 ? stops : this.defaultStops;
         this.updateGradient();
+        this.createTexture(); // Create the texture when the gradient is created
     }
     
     /**
@@ -26,6 +28,46 @@ export default class ColorGradient {
     updateGradient() {
         // Create the tinygradient instance
         this.gradient = tinygradient(this.stops);
+    }
+    
+    /**
+     * Create a texture from the gradient
+     * @param {number} width - Width of the gradient texture (default 256)
+     */
+    createTexture(width = 256) {
+        // Create a canvas to draw the gradient
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = 1; // 1D texture only needs 1 pixel height
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Create a linear gradient
+        const gradientFill = ctx.createLinearGradient(0, 0, width, 0);
+        
+        // Add color stops to the gradient
+        this.stops.forEach(stop => {
+            gradientFill.addColorStop(stop.pos, stop.color);
+        });
+        
+        // Fill the canvas with the gradient
+        ctx.fillStyle = gradientFill;
+        ctx.fillRect(0, 0, width, 1);
+        
+        // Create a PIXI texture from the canvas
+        if (this.texture) {
+            this.texture.destroy(true);
+        }
+        this.texture = PIXI.Texture.from(canvas);
+        
+        return this.texture;
+    }
+    
+    /**
+     * Update the texture after stops have changed
+     */
+    updateTexture() {
+        this.createTexture();
     }
     
     /**
@@ -43,8 +85,9 @@ export default class ColorGradient {
         // Sort stops by position
         this.stops.sort((a, b) => a.pos - b.pos);
         
-        // Update the gradient
+        // Update the gradient and texture
         this.updateGradient();
+        this.updateTexture();
         
         return this.stops;
     }
@@ -54,9 +97,11 @@ export default class ColorGradient {
      * @param {number} index - Index of the stop to remove
      */
     removeStop(index) {
-        if (index >= 0 && index < this.stops.length) {
+        if (index >= 0 && index < this.stops.length && this.stops.length > 2) {
+            // Don't allow fewer than 2 stops
             this.stops.splice(index, 1);
             this.updateGradient();
+            this.updateTexture();
         }
         
         return this.stops;
@@ -77,9 +122,18 @@ export default class ColorGradient {
             this.stops.sort((a, b) => a.pos - b.pos);
             
             this.updateGradient();
+            this.updateTexture();
         }
         
         return this.stops;
+    }
+    
+    /**
+     * Get the PIXI texture for this gradient
+     * @returns {PIXI.Texture} - The gradient texture
+     */
+    getTexture() {
+        return this.texture;
     }
     
     /**
